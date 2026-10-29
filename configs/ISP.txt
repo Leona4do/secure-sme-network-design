@@ -1,0 +1,14 @@
+! ISP - Router que simula el proveedor de Internet
+! Cisco Packet Tracer - Router 2911
+
+hostname ISP
+
+interface GigabitEthernet0/0
+ description Enlace WAN hacia R-EDGE
+ ip address 200.1.1.1 255.255.255.252
+ no shutdown
+
+interface GigabitEthernet0/1
+ description Red de Internet simulada (PC-INTERNET)
+ ip address 203.0.113.1 255.255.255.0
+ no shutdown

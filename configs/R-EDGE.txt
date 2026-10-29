@@ -1,0 +1,118 @@
+! R-EDGE - Router de borde: inter-VLAN (router-on-a-stick), NAT/PAT, ACL y gestion segura
+! Cisco Packet Tracer - Router 2911
+! Las contrasenas se reemplazaron por <password>
+
+hostname R-EDGE
+enable secret <password>
+service password-encryption
+username admin privilege 15 secret <password>
+ip domain-name andestech.local
+! Generar clave RSA: "crypto key generate rsa" y responder 1024
+! (la version de Packet Tracer utilizada no acepta la palabra "modulus")
+ip ssh version 2
+
+banner motd #ACCESO RESTRINGIDO: solo personal autorizado. Toda actividad es monitoreada.#
+
+! ---------- Interfaces ----------
+interface GigabitEthernet0/0
+ description WAN hacia ISP
+ ip address 200.1.1.2 255.255.255.252
+ ip nat outside
+ no shutdown
+
+interface GigabitEthernet0/1
+ description Trunk hacia SW-CORE
+ no ip address
+ no shutdown
+
+interface GigabitEthernet0/1.10
+ description VLAN 10 ADMINISTRACION
+ encapsulation dot1Q 10
+ ip address 192.168.10.1 255.255.255.0
+ ip access-group STAFF_IN in
+ ip nat inside
+
+interface GigabitEthernet0/1.20
+ description VLAN 20 VENTAS
+ encapsulation dot1Q 20
+ ip address 192.168.20.1 255.255.255.0
+ ip access-group STAFF_IN in
+ ip nat inside
+
+interface GigabitEthernet0/1.30
+ description VLAN 30 TI
+ encapsulation dot1Q 30
+ ip address 192.168.30.1 255.255.255.0
+ ip nat inside
+
+interface GigabitEthernet0/1.40
+ description VLAN 40 SERVIDORES
+ encapsulation dot1Q 40
+ ip address 192.168.40.1 255.255.255.0
+ ip nat inside
+
+interface GigabitEthernet0/1.50
+ description VLAN 50 INVITADOS
+ encapsulation dot1Q 50
+ ip address 192.168.50.1 255.255.255.0
+ ip access-group GUEST_IN in
+ ip nat inside
+
+interface GigabitEthernet0/1.99
+ description VLAN 99 GESTION
+ encapsulation dot1Q 99
+ ip address 192.168.99.1 255.255.255.0
+ ip nat inside
+
+interface GigabitEthernet0/2
+ description DMZ (SW-DMZ / SRV-WEB)
+ ip address 172.16.1.1 255.255.255.0
+ ip access-group DMZ_IN in
+ ip nat inside
+ no shutdown
+
+! ---------- Enrutamiento y NAT ----------
+ip route 0.0.0.0 0.0.0.0 200.1.1.1
+access-list 1 permit 192.168.0.0 0.0.255.255
+access-list 1 permit 172.16.1.0 0.0.0.255
+ip nat inside source list 1 interface GigabitEthernet0/0 overload
+! Publicacion del servidor web de la DMZ (puerto 80)
+ip nat inside source static tcp 172.16.1.10 80 200.1.1.2 80
+
+! ---------- ACL de segmentacion ----------
+! Invitados: solo Internet, sin acceso a redes internas ni a la DMZ
+ip access-list extended GUEST_IN
+ deny ip 192.168.50.0 0.0.0.255 192.168.0.0 0.0.255.255
+ deny ip 192.168.50.0 0.0.0.255 172.16.1.0 0.0.0.255
+ permit ip any any
+
+! Administracion y Ventas: solo SRV-ARCHIVOS; sin acceso a TI ni a Gestion
+ip access-list extended STAFF_IN
+ permit ip any host 192.168.40.10
+ permit tcp any 192.168.30.0 0.0.0.255 established
+ permit icmp any 192.168.30.0 0.0.0.255 echo-reply
+ deny ip any 192.168.0.0 0.0.255.255
+ permit ip any any
+
+! DMZ: no puede iniciar conexiones hacia la red interna
+ip access-list extended DMZ_IN
+ permit tcp 172.16.1.0 0.0.0.255 192.168.0.0 0.0.255.255 established
+ permit icmp 172.16.1.0 0.0.0.255 192.168.0.0 0.0.255.255 echo-reply
+ deny ip 172.16.1.0 0.0.0.255 192.168.0.0 0.0.255.255
+ permit ip any any
+
+! ---------- Gestion remota ----------
+ip access-list standard VTY_MGMT
+ permit 192.168.30.0 0.0.0.255
+ permit 192.168.99.0 0.0.0.255
+ deny any
+
+line vty 0 4
+ login local
+ transport input ssh
+ access-class VTY_MGMT in
+
+line console 0
+ password <password>
+ login
+ logging synchronous

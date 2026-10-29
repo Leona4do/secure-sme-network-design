@@ -1,0 +1,4 @@
+! SW-DMZ - Switch de la DMZ (sin configuracion especial, VLAN 1 por defecto)
+! Fa0/1 -> R-EDGE Gi0/2
+! Fa0/2 -> SRV-WEB (172.16.1.10/24, gateway 172.16.1.1)
+hostname SW-DMZ

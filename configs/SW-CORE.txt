@@ -1,0 +1,85 @@
+! SW-CORE - Switch principal: VLAN, trunk, puertos de acceso y gestion segura
+! Cisco Packet Tracer - Switch 2960
+! Las contrasenas se reemplazaron por <password>
+
+hostname SW-CORE
+enable secret <password>
+service password-encryption
+username admin privilege 15 secret <password>
+ip domain-name andestech.local
+! Generar clave RSA: "crypto key generate rsa" y responder 1024
+ip ssh version 2
+
+banner motd #ACCESO RESTRINGIDO: solo personal autorizado. Toda actividad es monitoreada.#
+
+! ---------- VLAN ----------
+vlan 10
+ name ADMINISTRACION
+vlan 20
+ name VENTAS
+vlan 30
+ name TI
+vlan 40
+ name SERVIDORES
+vlan 50
+ name INVITADOS
+vlan 99
+ name GESTION
+
+! ---------- Puertos ----------
+interface FastEthernet0/1
+ description Trunk hacia R-EDGE
+ switchport mode trunk
+ switchport trunk allowed vlan 10,20,30,40,50,99
+
+interface FastEthernet0/2
+ description PC-ADMINISTRACION
+ switchport mode access
+ switchport access vlan 10
+
+interface FastEthernet0/3
+ description PC-VENTAS
+ switchport mode access
+ switchport access vlan 20
+
+interface FastEthernet0/4
+ description PC-TI
+ switchport mode access
+ switchport access vlan 30
+
+interface FastEthernet0/5
+ description SRV-ARCHIVOS
+ switchport mode access
+ switchport access vlan 40
+
+interface FastEthernet0/6
+ description AP-INVITADOS
+ switchport mode access
+ switchport access vlan 50
+
+! Puertos sin uso apagados
+interface range FastEthernet0/7 - 24
+ shutdown
+interface range GigabitEthernet0/1 - 2
+ shutdown
+
+! ---------- Gestion ----------
+interface Vlan99
+ ip address 192.168.99.2 255.255.255.0
+ no shutdown
+ip default-gateway 192.168.99.1
+
+ip access-list standard VTY_MGMT
+ permit 192.168.30.0 0.0.0.255
+ permit 192.168.99.0 0.0.0.255
+ deny any
+
+line vty 0 15
+ login local
+ transport input ssh
+ access-class VTY_MGMT in
+
+line console 0
+ password <password>
+ login
+ logging synchronous

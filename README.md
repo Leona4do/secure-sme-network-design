@@ -1,6 +1,6 @@
 # Diseño de red segura para una pyme (AndesTech Solutions SpA)
 
-Diseño, implementación y validación de una red corporativa segura para una pyme ficticia de ~40 usuarios, simulada en **Cisco Packet Tracer**. El proyecto incluye segmentación con VLAN, enrutamiento entre VLAN, zona DMZ, NAT/PAT, listas de control de acceso (ACL), Wi-Fi de invitados aislado y endurecimiento de la gestión (SSH).
+Diseño, implementación y validación de una red corporativa segura para una pyme ficticia de + 40 usuarios, simulada en **Cisco Packet Tracer**. El proyecto incluye segmentación con VLAN, enrutamiento entre VLAN, zona DMZ, NAT/PAT, listas de control de acceso (ACL), Wi-Fi de invitados aislado y endurecimiento de la gestión (SSH).
 
 > Todo el trabajo se realizó en un laboratorio simulado. Las contraseñas de los archivos de configuración fueron reemplazadas por `<password>`.
 
